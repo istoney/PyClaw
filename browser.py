@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
 from PIL import Image
-from client.gemini_client import GeminiClient
+from client.gemini import GeminiClient
 
 OPEN_PAGES = { }
 llm_client = anthropic.Anthropic(

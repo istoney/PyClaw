@@ -5,7 +5,7 @@ import browser
 import global_settings
 from pathlib import Path
 from datetime import datetime
-from client.gemini_client import GeminiClient
+from client.gemini import GeminiClient
 
 gemini_cli = GeminiClient(global_settings)
 TOOLS = { }
