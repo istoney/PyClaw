@@ -1,3 +1,4 @@
+import os
 import json
 import tools_hub
 import initalize
@@ -14,11 +15,29 @@ class Agent():
     def __init__(self, queue, telegram):
         self.queue = queue
         self.telegram = telegram
-        self.system_prompt = SYSTEM_PROMPT + f'\nYour current working directory is: {global_settings.working_directory}'
+        self.system_prompt = SYSTEM_PROMPT.format(
+            working_directory=global_settings.working_directory,
+            soul=self.load_soul(),
+            user_preferences=self.load_user_preferences()
+        )
         self.messages = [{
             "role": "system",
             "content": self.system_prompt
         }]
+    
+    def load_soul(self):
+        soul_path = os.path.join(global_settings.working_directory, "soul.md")
+        if os.path.exists(soul_path):
+            with open(soul_path, "r") as f:
+                return f.read()
+        return ""
+    
+    def load_user_preferences(self):
+        user_pref_path = os.path.join(global_settings.working_directory, "user_preferences.md")
+        if os.path.exists(user_pref_path):
+            with open(user_pref_path, "r") as f:
+                return f.read()
+        return ""
     
     def complete(self):
         raise NotImplementedError("This method should be implemented by subclasses")
