@@ -14,7 +14,7 @@ class Agent():
     def __init__(self, queue, telegram):
         self.queue = queue
         self.telegram = telegram
-        self.system_prompt = SYSTEM_PROMPT + f'\nYour current working directory is: {global_settings.working_directory}' if global_settings.working_directory else ''
+        self.system_prompt = SYSTEM_PROMPT + f'\nYour current working directory is: {global_settings.working_directory}'
         self.messages = [{
             "role": "system",
             "content": self.system_prompt
@@ -38,20 +38,11 @@ class Agent():
                 "content": user_msg
             })
 
-            summarize_sop = False
             while True:
                 response = self.complete()
                 task_done = self.process_response(response)
                 if task_done:
-                    if summarize_sop:
-                        # task done, wait for next instruction
-                        break
-                    # summarize SOP
-                    summarize_sop = True
-                    self.messages.append({
-                        "role": "user",
-                        "content": SUMMARIZR_SOP
-                    })
+                    break
 
 class OpenRouterAgent(Agent):
     def __init__(self, queue, telegram):
@@ -104,7 +95,7 @@ class AnthropicAgent(Agent):
             base_url=global_settings.anthropic_base_url
         )
         self.model = global_settings.anthropic_model
-        self.system_prompt = SYSTEM_PROMPT + f'\nYour current working directory is: {global_settings.working_directory}' if global_settings.working_directory else ''
+        self.system_prompt = SYSTEM_PROMPT + f'\nYour current working directory is: {global_settings.working_directory}'
         self.messages = []
         self.tool_definitions = tools_hub.get_tool_definitions_claude_style()
     
