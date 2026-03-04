@@ -1,4 +1,5 @@
 import json
+from rich import print
 
 working_directory = "~"
 telegram_bot_token = None
@@ -33,3 +34,5 @@ def load():
         anthropic_model = settings.get("anthropic_model", anthropic_model)
         gemini_api_key = settings.get("gemini_api_key", gemini_api_key)
         model_provider = settings.get("model_provider", model_provider)
+        return
+    print("[red]Failed to load settings.json. Please ensure the file exists and is properly formatted.[/red]")

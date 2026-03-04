@@ -155,72 +155,6 @@ class AnthropicAgent(Agent):
             return False
         return True
 
-
-tool_definitions = tools_hub.get_tool_definitions_openai_style()
-
-def agent_loop(queue, telegram):
-    openrouter = OpenRouterClient(global_settings)
-    model = global_settings.openrouter_model
-
-    system_prompt = SYSTEM_PROMPT + f'\nYour current working directory is: {global_settings.working_directory}' if global_settings.working_directory else ''
-    messages = [{
-        "role": "system",
-        "content": system_prompt
-    }]
-
-    while True:
-        # user_input = input("User: ").strip()
-        user_msg = queue.get()
-        user_msg = user_msg.strip()
-        if user_msg == "":
-            continue
-        messages.append({
-            "role": "user",
-            "content": user_msg
-        })
-
-        summarize_sop = False
-        while True:
-            response = openrouter.complete(
-                model, 
-                messages=messages, 
-                tools=tool_definitions)
-            # print(f"[yellow]Raw Model Response:\n{json.dumps(response, indent=2)}[/yellow]\n")
-            has_tool_calls = False
-            for chunk in response['output']:
-                if chunk['type'] == 'reasoning':
-                    for summary in chunk['summary']:
-                        print(f"[white]Model Reasoning:\n{summary['text']}[/white]\n")
-                elif chunk['type'] == 'message':
-                    messages.append(chunk)
-                    for content in chunk['content']:
-                        print(f"[yellow]Model Response:\n{content['text']}[/yellow]\n")
-                        telegram.send_telegram_msg(content['text'])
-                elif chunk['type'] == 'function_call':
-                    messages.append(chunk)
-                    has_tool_calls = True
-                    id = chunk['id']
-                    call_id = chunk['call_id']
-                    call_name = chunk['name']
-                    call_args = json.loads(chunk['arguments'])
-                    print(f"[blue]Model Function Call:\nFunction Name: {call_name}\nFunction Arguments: {call_args}[/blue]\n")
-                    tool_result = tools_hub.run_tool(call_name, call_args)
-                    print(f"[green]Tool Result:\n{tool_result}[/green]\n")
-                    messages.append({
-                        "type": "function_call_output",
-                        "id": id + "_output",
-                        "call_id": call_id,
-                        "output": tool_result
-                    })
-            if not has_tool_calls:
-                if summarize_sop:
-                    break
-                summarize_sop = True
-                messages.append({
-                    "role": "user",
-                    "content": SUMMARIZR_SOP
-                })
-
 def main():
     global_settings.load()
     initalize.init()
@@ -234,11 +168,10 @@ def main():
     polling_thread = threading.Thread(target=telegram.polling, args=(on_message,), daemon=True)
     polling_thread.start()
 
-    # agent_loop(q, telegram)
     agent = None
     if global_settings.model_provider == "openrouter":
         agent = OpenRouterAgent(q, telegram)
-    elif global_settings.model_provider == "minimax":
+    elif global_settings.model_provider == "anthropic":
         agent = AnthropicAgent(q, telegram)
     else:
         print(f"[red]Unsupported model provider: {global_settings.model_provider}[/red]")

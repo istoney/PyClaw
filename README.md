@@ -12,6 +12,8 @@ git clone git@github.com:istoney/PyClaw.git
 
 Rename `settings_example.json` to `settings.json` and replace the placeholders with your actual configurations.
 
+Currently, two LLM model provider supported, openrouter and anthropic(any model provider support anthropic SDK is supported). When model provider is set, corresponding api key must also be set. 
+
 3. Install dependencies:
 
 ```sh
