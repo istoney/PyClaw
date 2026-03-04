@@ -6,11 +6,11 @@ import uuid
 import anthropic
 import random
 import global_settings
+from PIL import Image
 from rich import print
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
-from PIL import Image
 from client.gemini import GeminiClient
 
 OPEN_PAGES = { }
@@ -27,26 +27,20 @@ def get_full_html_fixed(page):
     script = """
     () => {
         const serialize = (node) => {
-            // 处理文本节点
             if (node.nodeType === Node.TEXT_NODE) {
                 return node.textContent;
             }
             
-            // 如果不是元素节点也不是 ShadowRoot，跳过
             if (node.nodeType !== Node.ELEMENT_NODE && node.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
                 return "";
             }
 
             let html = "";
-
-            // 如果是普通的元素节点
             if (node.nodeType === Node.ELEMENT_NODE) {
                 const tagName = node.tagName.toLowerCase();
-                // 获取起始标签及属性
                 const clone = node.cloneNode(false);
                 const outer = clone.outerHTML;
                 
-                // 判断是否是自闭合标签 (br, img, input 等)
                 const isSelfClosing = /^(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/i.test(tagName);
                 
                 const tagSplitIndex = outer.indexOf(">") + 1;
@@ -54,29 +48,21 @@ def get_full_html_fixed(page):
                 const closingTag = isSelfClosing ? "" : `</${tagName}>`;
 
                 html += openingTag;
-
-                // 核心：处理 Shadow DOM
                 if (node.shadowRoot) {
                     html += `${serialize(node.shadowRoot)}`;
                 }
-
-                // 处理子节点
                 for (const child of node.childNodes) {
                     html += serialize(child);
                 }
-
                 html += closingTag;
             } 
-            // 如果是 ShadowRoot 节点
             else {
                 for (const child of node.childNodes) {
                     html += serialize(child);
                 }
             }
-
             return html;
         };
-
         return "<!DOCTYPE html>" + serialize(document.documentElement);
     }
     """
@@ -370,8 +356,6 @@ def login_page(page_id):
     page.locator('xpath=' + login_xpath).click()
     time.sleep(random.uniform(5, 10))
     # time.sleep(30)
-    # 从这里手动输入username + 粘贴密码，可以正常登陆
-    # 从这里粘贴username + 粘贴密码，可以正常登陆
 
     try:
         username = input("Enter username for login: ")
@@ -428,25 +412,18 @@ import html2text
 
 def clean_html_basic(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
-    
-    # 剔除人眼不可见的标签
     for element in soup(["script", "style", "header", "footer", "nav"]):
         element.decompose()
-
-    # 获取文本，separator 确保块级元素之间有换行
     text = soup.get_text(separator='\n')
-    
-    # 清理多余空格和空行
     lines = (line.strip() for line in text.splitlines())
     return '\n'.join(chunk for chunk in lines if chunk)
 
 def extract_readable_text(html_content):
-    # 直接提取正文，丢弃所有 HTML 杂质
     result = trafilatura.extract(html_content)
     return result
 
 def html_to_markdown(html_content):
     h = html2text.HTML2Text()
-    h.ignore_links = False  # 是否忽略链接
+    h.ignore_links = False 
     h.ignore_images = True
     return h.handle(html_content)
