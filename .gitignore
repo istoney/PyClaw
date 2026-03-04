@@ -1,2 +1,16 @@
 settings.json
 test*.py
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.log
+*.bak
+*.tmp
+.idea/
+.vscode/
+.DS_Store
+.env/
+env/
+venv/
