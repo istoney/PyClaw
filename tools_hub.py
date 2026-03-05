@@ -58,13 +58,18 @@ def glob(tool_input):
                 "pattern": {
                     "type": "string",
                     "description": "File name matching pattern, supports wildcards, e.g., *.txt"
+                },
+                "with_details": {
+                    "type": "boolean",
+                    "description": "Whether to include file details such as size and creation date, default is false"
                 }
             },
-            "required": ["directory", "pattern"]
+            "required": ["directory", "pattern", "with_details"]
         }
     } """
     directory = tool_input.get("directory")
     pattern = tool_input.get("pattern", "*")
+    with_details = tool_input.get("with_details", False)
     p = Path(directory).expanduser()
     l = []
     for file_path in p.glob(pattern):
@@ -72,7 +77,11 @@ def glob(tool_input):
         size = stats.st_size  # In bytes
         create_date = datetime.fromtimestamp(stats.st_ctime).strftime('%Y-%m-%d %H:%M:%S')
         update_date = datetime.fromtimestamp(stats.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
-        l.append(f'{file_path} | {"file" if file_path.is_file() else "folder"} | created at {create_date} | last updated at {update_date} | size {size} bytes')
+        fp = str(file_path).replace(str(p) + "/", "")
+        if with_details:
+            l.append(f'{fp} | {"file" if file_path.is_file() else "folder"} | created at {create_date} | last updated at {update_date} | size {size} bytes')
+        else:
+            l.append(f'{fp} | {"file" if file_path.is_file() else "folder"}')
     return "\n".join(l)
 
 @tool_handler
@@ -101,6 +110,30 @@ def tail(tool_input):
         with open(file_path, 'r') as f:
             content = f.readlines()[-lines:]
         return "\n".join(content)
+    except Exception as e:
+        return f"Error reading file: {str(e)}"
+
+@tool_handler
+def count_lines(tool_input):
+    """ {
+        "description": "Count the number of lines in a specified file",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "File path, e.g., ~/Documents/notes.txt"
+                }
+            },
+            "required": ["file_path"]
+        }
+    } """
+    file_path = tool_input.get("file_path")
+    try:
+        file_path = Path(file_path).expanduser()
+        with open(file_path, 'r') as f:
+            line_count = sum(1 for _ in f)
+        return f"{file_path} has {line_count} lines."
     except Exception as e:
         return f"Error reading file: {str(e)}"
 
@@ -312,6 +345,10 @@ def open_web_page(tool_input):
         }
     } """
     url = tool_input.get("url")
+    url_pattern = re.compile(r'^(https?://)?([a-zA-Z0-9.-]+)(:[0-9]+)?(/.*)?$')
+    if not url_pattern.match(url):
+        return f"Error: Invalid URL '{url}'. Reminder: Don't use open_web_page tool to open local files."
+
     workdir = global_settings.working_directory
     page_id, file_path, file_path2  = browser.open_url(url, workdir)
     summary = browser.summarize_page(page_id)
