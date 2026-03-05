@@ -13,6 +13,7 @@ anthropic_base_url = None
 anthropic_api_key = None
 anthropic_model = None
 model_provider = None
+compression_threshold = 3000
 
 def load():
     with open("settings.json", "r") as f:
@@ -22,6 +23,7 @@ def load():
         global anthropic_base_url, anthropic_api_key, anthropic_model
         global gemini_api_key
         global model_provider
+        global compression_threshold
         working_directory = settings.get("working_directory", working_directory)
         telegram_bot_token = settings.get("telegram_bot_token", telegram_bot_token)
         telegram_chat_id = settings.get("telegram_chat_id", telegram_chat_id)
@@ -34,5 +36,6 @@ def load():
         anthropic_model = settings.get("anthropic_model", anthropic_model)
         gemini_api_key = settings.get("gemini_api_key", gemini_api_key)
         model_provider = settings.get("model_provider", model_provider)
+        compression_threshold = settings.get("compression_threshold", compression_threshold)
         return
     print("[red]Failed to load settings.json. Please ensure the file exists and is properly formatted.[/red]")

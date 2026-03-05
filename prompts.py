@@ -47,3 +47,10 @@ A brief description of the task and its purpose.
 
 Check if same SOP exists before saving, if exists, update the existing SOP with new information instead of creating a new one.
 """
+
+COMPRESS_PROMPT = """Below is a conversation between user and AI assistant, compress the conversation and summarize the key information. 
+Current task, SOP details(if mentioned), AI assistant's action, task progress, next action must be included in the summary. 
+The summary should be concise and only include key information.
+
+The conversation is:
+"""

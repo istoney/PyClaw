@@ -8,7 +8,7 @@ class OpenRouterClient():
         self.api_key = settings.openrouter_api_key
         self.proxy_url = settings.http_proxy
 
-    def complete(self, model, messages, tools):
+    def complete(self, model, messages, tools=[]):
         data = {
             "model": model,
             "input": messages,

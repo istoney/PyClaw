@@ -16,22 +16,27 @@ class Agent():
     
     def load_soul(self):
         soul_path = os.path.join(global_settings.working_directory, "soul.md")
-        if os.path.exists(soul_path):
-            with open(soul_path, "r") as f:
-                return f.read()
+        soul_path = os.path.expanduser(soul_path)
+        print(soul_path)
+        with open(soul_path, "r") as f:
+            return f.read()
         return ""
     
     def load_user_preferences(self):
         user_pref_path = os.path.join(global_settings.working_directory, "user_preferences.md")
-        if os.path.exists(user_pref_path):
-            with open(user_pref_path, "r") as f:
-                return f.read()
+        user_pref_path = os.path.expanduser(user_pref_path)
+        print(user_pref_path)
+        with open(user_pref_path, "r") as f:
+            return f.read()
         return ""
     
-    def complete(self):
+    def generate_next_step():
         raise NotImplementedError("This method should be implemented by subclasses")
     
     def process_response(self, response):
+        raise NotImplementedError("This method should be implemented by subclasses")
+    
+    def compress_conversation(self):
         raise NotImplementedError("This method should be implemented by subclasses")
 
     def loop(self):
@@ -47,7 +52,11 @@ class Agent():
             })
 
             while True:
-                response = self.complete()
+                response, input_tokens = self.generate_next_step()
+                if input_tokens > global_settings.compression_threshold:
+                    print(f"[purple]Input tokens ({input_tokens}) exceed compression threshold. Compressing conversation...[/purple]")
+                    self.compress_conversation()
+
                 task_done = self.process_response(response)
                 if task_done:
                     break

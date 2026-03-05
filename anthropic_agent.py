@@ -3,6 +3,7 @@ import global_settings
 import anthropic
 from agent import Agent
 from rich import print
+from prompts import COMPRESS_PROMPT
 
 class AnthropicAgent(Agent):
 
@@ -16,7 +17,7 @@ class AnthropicAgent(Agent):
         self.tool_definitions = tools_hub.get_tool_definitions_claude_style()
         self.messages = []
     
-    def complete(self):
+    def generate_next_step(self):
         message = self.llm_client.messages.create(
             model=self.model,
             max_tokens=1024,
@@ -24,7 +25,34 @@ class AnthropicAgent(Agent):
             system=self.system_prompt,
             messages=self.messages
         )
-        return message
+        input_tokens = message.usage.input_tokens
+        print(f"[purple]Generate, Input Tokens: {input_tokens}[/purple]")
+        return message, input_tokens
+    
+    def compress_conversation(self):
+        messages = self.messages[:]
+        messages.append({
+            "role": "system",
+            "content": COMPRESS_PROMPT
+        })
+        message = self.llm_client.messages.create(
+            model=self.model,
+            max_tokens=2048,
+            system=self.system_prompt,
+            messages=messages
+        )
+        output_tokens = message.usage.output_tokens
+        print(f"[purple]Compression Result (Output Tokens: {output_tokens}) [/purple]")
+
+        compressed_summary = ""
+        for block in message.content:
+            if block.type == "text":
+                compressed_summary += block.text + "\n"
+        print(f"[purple]{compressed_summary}[/purple]")
+        self.messages = [{
+            "role": "system",
+            "content": f"Current conversation with user is:\n{compressed_summary}"
+        }]
     
     def process_response(self, message):
         self.messages.append({
