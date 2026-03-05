@@ -1,3 +1,4 @@
+import json
 import tools_hub
 import global_settings
 import anthropic
@@ -30,28 +31,29 @@ class AnthropicAgent(Agent):
         return message, input_tokens
     
     def compress_conversation(self):
-        messages = self.messages[:]
-        messages.append({
-            "role": "system",
-            "content": COMPRESS_PROMPT
-        })
+        conversation = json.dumps(self.messages)
+        prompt = COMPRESS_PROMPT + "\n```\n" + conversation + "\n```\nNow start to summarize the conversation"
         message = self.llm_client.messages.create(
             model=self.model,
             max_tokens=2048,
             system=self.system_prompt,
-            messages=messages
+            messages=[{
+                "role": "system",
+                "content": prompt
+            }]
         )
-        output_tokens = message.usage.output_tokens
-        print(f"[purple]Compression Result (Output Tokens: {output_tokens}) [/purple]")
 
+        output_tokens = message.usage.output_tokens
         compressed_summary = ""
         for block in message.content:
             if block.type == "text":
                 compressed_summary += block.text + "\n"
+        print(f"[purple]Compression Result (Output Tokens: {output_tokens}) [/purple]")
         print(f"[purple]{compressed_summary}[/purple]")
+
         self.messages = [{
             "role": "system",
-            "content": f"Current conversation with user is:\n{compressed_summary}"
+            "content": f"Current conversation is:\n{compressed_summary}"
         }]
     
     def process_response(self, message):

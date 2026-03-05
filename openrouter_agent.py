@@ -29,41 +29,20 @@ class OpenRouterAgent(Agent):
         return response, input_tokens
     
     def compress_conversation(self):
-        conversation = []
-        for msg in self.messages[1:-1]:
-            msg_type = msg.get("type", "message")
-            if msg_type == "message":
-                if msg["role"] == "user" or msg["role"] == "system":
-                    conversation.append(
-                        f"message from {msg['role']}:\n{msg['content']}"
-                    )
-                elif msg["role"] == "assistant":
-                    conversation.append(
-                        f"message from assistant:\n{msg['content'][0]['text']}"
-                    )
-            elif msg_type == "function_call":
-                result = self.tool_results.get(msg['call_id'], "No result found")
-                conversation.append(
-                    f"function call from assistant:\nfunction name: {msg['name']}\nfunction arguments: {msg['arguments']}\nresult: {result}"
-                )
-        conversation = "\n--------\n".join(conversation)
+        conversation = json.dumps(self.messages[1:-1])
         prompt = COMPRESS_PROMPT + "\n```\n" + conversation + "\n```\nNow start to summarize the conversation"
-        print(f"[purple]Compress prompt is:\n{prompt}[/purple]")
-        print("============================================")
-
         response = self.openrouter.complete(self.model, messages=[{
             "role": "system",
             "content": prompt
         }])
+
         output_tokens = response['usage']['output_tokens']
         compressed_summary = ""
         for chunk in response['output']:
             if chunk['type'] == 'message':
                 for content in chunk['content']:
                     compressed_summary += content['text'] + "\n"
-
         print(f"[purple]Compression Result (Output Tokens: {output_tokens}) [/purple]")
-        print("============================================")
         print(f"[purple]{compressed_summary}[/purple]")
 
         self.messages = [{
