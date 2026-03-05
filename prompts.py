@@ -49,8 +49,11 @@ Check if same SOP exists before saving, if exists, update the existing SOP with 
 """
 
 COMPRESS_PROMPT = """Below is a conversation between user and AI assistant, compress the conversation and summarize the key information. 
-Current task, SOP details(if mentioned), AI assistant's action, task progress, next action must be included in the summary. 
-The summary should be concise and only include key information.
+
+Rules:
+- Current task, SOP (if mentioned), AI assistant's action, task progress, next action must be included in the summary. 
+- SOP details must be included if mentioned in the conversation for further actions.
+- The summary must be concise.
 
 The conversation is:
 """
