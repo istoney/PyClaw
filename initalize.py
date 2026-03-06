@@ -44,8 +44,6 @@ def init():
     working_directory = global_settings.working_directory
     if working_directory:
         working_directory = os.path.expanduser(working_directory)
-        if not working_directory.endswith("/"):
-            working_directory += "/"
         if not os.path.exists(working_directory):
             os.makedirs(working_directory)
         tmp = working_directory + "tmp/"
@@ -54,7 +52,7 @@ def init():
         sop = working_directory + "sop/" 
         if not os.path.exists(sop):
             os.makedirs(sop)
-        memory = working_directory + "memory/" 
+        memory = working_directory + ".memory/" 
         if not os.path.exists(memory):
             os.makedirs(memory)
         soul = working_directory + "soul.md"

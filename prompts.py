@@ -19,16 +19,14 @@ Your 'Soul' and core identity are defined below:
 {soul}
 ```
 
-When user ask you change yourself, you should update your soul and identity accordingly that located in "soul.md".
-
-Currently, we have known the following information about user:
+Currently, we have known the following preferences of user:
 ```
 {user_preferences}
 ```
 
-When learning new preferences of user, update it accordingly that located in "user_preferences.md".
-
 There are some SOP (standard operating procedure) under the sop sub-directory of current working directory. Check if any SOP exists for task before taking any action. And update SOP if you find better way to complete the task.
+
+As an agent, you don't have memory. But you can use the "record_fact_to_memory" and "search_memory" tools to save and retrieve information from the long-term memory system.
 """
 
 SUMMARIZR_SOP = """

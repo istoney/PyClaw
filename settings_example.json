@@ -16,5 +16,7 @@
     "anthropic_api_key": "<anthropic api key>",
     "anthropic_model": "<anthropic model>",
 
-    "model_provider": "<model provider, openrouter or anthropic>"
+    "model_provider": "<model provider, openrouter or anthropic>",
+
+    "compression_threshold": 10000
 }

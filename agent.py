@@ -17,7 +17,6 @@ class Agent():
     def load_soul(self):
         soul_path = os.path.join(global_settings.working_directory, "soul.md")
         soul_path = os.path.expanduser(soul_path)
-        print(soul_path)
         with open(soul_path, "r") as f:
             return f.read()
         return ""
@@ -25,7 +24,6 @@ class Agent():
     def load_user_preferences(self):
         user_pref_path = os.path.join(global_settings.working_directory, "user_preferences.md")
         user_pref_path = os.path.expanduser(user_pref_path)
-        print(user_pref_path)
         with open(user_pref_path, "r") as f:
             return f.read()
         return ""

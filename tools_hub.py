@@ -3,6 +3,7 @@ import json
 import functools
 import browser
 import global_settings
+import memory_management
 from pathlib import Path
 from datetime import datetime
 from client.gemini import GeminiClient
@@ -178,7 +179,7 @@ def grep(tool_input):
     except Exception as e:
         return f"Error reading file: {str(e)}"
 
-# @tool_handler
+@tool_handler
 def read_file(tool_input):
     """ {
         "description": "Read the content of a specified file",
@@ -189,27 +190,27 @@ def read_file(tool_input):
                     "type": "string",
                     "description": "File path, e.g., ~/Documents/notes.txt"
                 },
+                "lines": {
+                    "type": "integer",
+                    "description": "Number of lines to read from the beginning of the file, default is 10"
+                },
                 "offset": {
                     "type": "integer",
-                    "description": "Offset from the beginning of the file, default is 0"
-                },
-                "max_length": {
-                    "type": "integer",
-                    "description": "Maximum number of bytes to read, default is 1000"
+                    "description": "Number of lines to skip from the beginning of the file, default is 0"
                 }
             },
-            "required": ["file_path", "offset", "max_length"]
+            "required": ["file_path", "lines", "offset"]
         }
     } """
     file_path = tool_input.get("file_path")
+    lines = tool_input.get("lines", 10)
     offset = tool_input.get("offset", 0)
-    max_length = tool_input.get("max_length", 1000)
     try:
         file_path = Path(file_path).expanduser()
         with open(file_path, 'r') as f:
-            f.seek(offset)
-            content = f.read(max_length)
-        return content
+            for _ in range(offset):
+                next(f, None)
+            return "".join([next(f, "") for _ in range(lines)])
     except Exception as e:
         return f"Error reading file: {str(e)}"
 
@@ -407,3 +408,50 @@ def download_file(tool_input):
         return f"Successfully downloaded file from {url} to {file_path}"
     else:
         return f"Error: Failed to download file from {url}"
+
+@tool_handler
+def record_fact_to_memory(tool_input):
+    """ {
+        "description": "Record a fact to memory. This is a tool for recording important information that may be useful for future questions. The recorded facts will be stored in a long-term memory system and can be retrieved later when needed.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "fact_category": {
+                    "type": "string", 
+                    "description": "The category of the fact to be recorded, Value must be one of user_preference, agent_identity, common_fact."
+                },
+                "content": {
+                    "type": "string", 
+                    "description": "detailed content of the fact to be recorded"
+                },
+                "confidence": {
+                    "type": "integer", 
+                    "description": "confidence level, value from 1 to 10, with 10 being the most confident, default is 5"
+                }
+            },
+            "required": ["fact_category", "content", "confidence"]
+        }
+    } """
+    fact_category = tool_input.get("fact_category")
+    content = tool_input.get("content")
+    confidence = tool_input.get("confidence")
+    memory_management.record_memory(fact_category, content, confidence)
+    return f"Successfully recorded fact to memory."
+
+@tool_handler
+def search_memory(tool_input):
+    """ {
+        "description": "Search for relevant facts in memory based on a query. This tool allows you to retrieve information that has been previously recorded in the long-term memory system. You can use this tool to find relevant facts that may help answer a question or provide context for a task.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string", 
+                    "description": "The search query to find relevant facts in memory"
+                }
+            },
+            "required": ["query"]
+        }
+    } """
+    query = tool_input.get("query")
+    return memory_management.query_memory(query)

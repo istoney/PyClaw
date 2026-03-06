@@ -405,25 +405,3 @@ def strip_attributes_keep_structure(html_content):
 
     text = target_root.decode_contents()
     return re.sub(r'\s+', ' ', text)
-
-# =================================================================
-import trafilatura
-import html2text
-
-def clean_html_basic(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    for element in soup(["script", "style", "header", "footer", "nav"]):
-        element.decompose()
-    text = soup.get_text(separator='\n')
-    lines = (line.strip() for line in text.splitlines())
-    return '\n'.join(chunk for chunk in lines if chunk)
-
-def extract_readable_text(html_content):
-    result = trafilatura.extract(html_content)
-    return result
-
-def html_to_markdown(html_content):
-    h = html2text.HTML2Text()
-    h.ignore_links = False 
-    h.ignore_images = True
-    return h.handle(html_content)
