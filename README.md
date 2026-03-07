@@ -1,4 +1,4 @@
-# PyClaw
+# 🦀 PyClaw
 PyClaw is a Python-based personal AI assistant that runs locally on your computer to automate your workflows and handle tasks autonomously.
 
 ## 🚀 Getting Started
@@ -40,16 +40,21 @@ Powered by Playwright, PyClaw can navigate the web just like a human. It can ope
 
 Security is a priority. While PyClaw can read files across your system, it is restricted to writing or editing files only within its designated workspace(configurable, ~ by defualt).  This "sandbox" approach ensures your sensitive system files remain protected.
 
+### 📉 Context Compression
+
+A token threshold can be configured; once reached, PyClaw automatically compresses the chat history into a concise summary to maintain performance and reduce costs.
+
+### 💾 Long-term Memory
+
+PyClaw maintains a persistent memory system:
+
+- User Preferences(user_preferences.md): Remembers how user like things done—your favorite programming languages, preferred output formats, or specific notification settings. The user_preferences.md locate under root of working folder, user can review and modify it by self.
+- Agent Identity (soul.md): Defines the "personality" and ethical boundaries of assistant, ensuring consistent behavior across different tasks. The soul.md locate under root of working folder, user can review and modify it by self.
+- Common Facts: PyClaw leverage chromadb to manage common facts memory. And relevant facts will be loaded into context automatically.
+
 ### 🧠 Self-Evolving SOPs (Standard Operating Procedures)
 PyClaw learns from experience. After completing a task, it automatically summarizes the process into an SOP file.
 
 - Efficiency: For recurring tasks, PyClaw follows the established SOP to save time.
 
 - Continuous Learning: SOPs are dynamically updated as PyClaw gains new insights, making it smarter with every execution.
-
-### 📉 Context Compression
-(Coming Soon)
-
-### 💾 Long-term Memory
-(Coming Soon)
-
