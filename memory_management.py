@@ -33,14 +33,11 @@ def record_memory(category, content, confidence_level):
     return "Record common fact to memory successfully."
 
 def query_memory(query, n_results=5):
-    results = get_memory_collection().query(
+    return get_memory_collection().query(
         query_texts=[query],
         n_results=n_results,
         include=["metadatas", "documents"]
     )
-    mem = "\n".join(results['documents'][0])
-    print(f"[green]Memory query - Query: {query}, Results: \n{mem}[/green]")
-    return mem
 
 def _llm_complete(prompt):
     if global_settings.model_provider == "openrouter":
