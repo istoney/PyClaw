@@ -55,3 +55,9 @@ Rules:
 
 The conversation is:
 """
+
+TASK_COMPLETION_CHECK_PROMPT = """Check if all tasks are complete.
+Response strictly in JSON format: 
+{"task_done": true} or 
+{"task_done": false, "reason": "what remains to be done"}
+"""

@@ -4,7 +4,7 @@ import json
 from agent import Agent
 from client.openrouter import OpenRouterClient
 from rich import print
-from prompts import COMPRESS_PROMPT
+from prompts import COMPRESS_PROMPT, TASK_COMPLETION_CHECK_PROMPT
 
 class OpenRouterAgent(Agent):
 
@@ -19,24 +19,26 @@ class OpenRouterAgent(Agent):
         }]
         self.tool_results = {}
     
-    def generate_next_step(self):
-        response = self.openrouter.complete(
-            self.model, 
-            messages=self.messages, 
-            tools=self.tool_definitions)
+    def generate(self, model, messages, tools=None):
+        response = self.openrouter.complete(model, messages=messages, tools=tools)
         input_tokens = response['usage']['input_tokens']
-        print(f"[purple]Generate Input Tokens: {input_tokens}[/purple]")
+        output_tokens = response['usage']['output_tokens']
+        print(f"[purple]Generate Input Tokens: {input_tokens}, Output Tokens: {output_tokens}[/purple]")
+        return response, input_tokens, output_tokens
+    
+    def generate_next_step(self):
+        response, input_tokens, _ = self.generate(self.model, self.messages, tools=self.tool_definitions)
         return response, input_tokens
     
     def compress_conversation(self):
         conversation = json.dumps(self.messages[1:-1])
         prompt = COMPRESS_PROMPT + "\n```\n" + conversation + "\n```\nNow start to summarize the conversation"
-        response = self.openrouter.complete(self.model, messages=[{
+
+        response, input_tokens, output_tokens = self.generate(self.model, messages=[{
             "role": "system",
             "content": prompt
         }])
 
-        output_tokens = response['usage']['output_tokens']
         compressed_summary = ""
         for chunk in response['output']:
             if chunk['type'] == 'message':
@@ -81,4 +83,18 @@ class OpenRouterAgent(Agent):
                     "call_id": call_id,
                     "output": tool_result
                 })
-        return not has_tool_calls
+        return has_tool_calls
+
+    def check_task_completion(self):
+        messages = self.messages.copy()
+        messages.append({
+            "role": "system",
+            "content": TASK_COMPLETION_CHECK_PROMPT
+        })
+        response, _, _ = self.generate(self.model, messages)
+        for chunk in response['output']:
+            if chunk['type'] == 'message':
+                content = chunk['content'][0]['text']
+                data = json.loads(content)
+                return data.get("task_done", False), data.get("reason", "")
+        return False, ""

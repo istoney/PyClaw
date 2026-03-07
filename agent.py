@@ -1,7 +1,7 @@
 import os
 import global_settings
 from rich import print
-from prompts import SYSTEM_PROMPT
+from prompts import SYSTEM_PROMPT, TASK_COMPLETION_CHECK_PROMPT
 import memory_management
 
 class Agent():
@@ -31,7 +31,7 @@ class Agent():
             return f.read()
         return ""
     
-    def generate_next_step():
+    def generate(self, model, messages, tools=None):
         raise NotImplementedError("This method should be implemented by subclasses")
     
     def process_response(self, response):
@@ -39,7 +39,10 @@ class Agent():
     
     def compress_conversation(self):
         raise NotImplementedError("This method should be implemented by subclasses")
-    
+
+    def check_task_completion(self):
+        raise NotImplementedError("This method should be implemented by subclasses")
+
     def query_and_load_memories(self, user_msg):
         l = []
         related_memories = memory_management.query_memory(user_msg)
@@ -73,11 +76,28 @@ class Agent():
                 })
 
             while True:
-                response, input_tokens = self.generate_next_step()
+                response, input_tokens, output_tokens = self.generate_next_step(
+                    self.model, self.messages, tools=self.tool_definitions
+                )
+
                 if input_tokens > global_settings.compression_threshold:
                     print(f"[purple]Input tokens ({input_tokens}) exceed compression threshold. Compressing conversation...[/purple]")
                     self.compress_conversation()
 
-                task_done = self.process_response(response)
+                has_tool_calls= self.process_response(response)
+                if has_tool_calls:
+                    continue
+                task_done, to_do = self.check_task_completion()
                 if task_done:
+                    print("[green]Task completed. Waiting for new instructions...[/green]")
+                    self.update_sop()
                     break
+                else:
+                    self.messages.append({
+                        "role": "system",
+                        "content": f"Task is not completed. Remaining to do: {to_do}"
+                    })
+    
+    def update_sop(self):
+        # do in sub-agent
+        pass
