@@ -19,7 +19,7 @@ class OpenRouterAgent(Agent):
         }]
         self.tool_results = {}
     
-    def generate(self, model, messages, tools=None):
+    def generate(self, model, messages, tools=[]):
         response = self.openrouter.complete(model, messages=messages, tools=tools)
         input_tokens = response['usage']['input_tokens']
         output_tokens = response['usage']['output_tokens']
@@ -88,13 +88,14 @@ class OpenRouterAgent(Agent):
     def check_task_completion(self):
         messages = self.messages.copy()
         messages.append({
-            "role": "system",
+            "role": "user",
             "content": TASK_COMPLETION_CHECK_PROMPT
         })
         response, _, _ = self.generate(self.model, messages)
         for chunk in response['output']:
             if chunk['type'] == 'message':
                 content = chunk['content'][0]['text']
+                print(f"[yellow]Task Completion Check Result:\n{content}[/yellow]\n")
                 data = json.loads(content)
                 return data.get("task_done", False), data.get("reason", "")
         return False, ""

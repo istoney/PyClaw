@@ -31,7 +31,7 @@ class Agent():
             return f.read()
         return ""
     
-    def generate(self, model, messages, tools=None):
+    def generate(self, model, messages, tools=[]):
         raise NotImplementedError("This method should be implemented by subclasses")
     
     def process_response(self, response):
@@ -76,7 +76,7 @@ class Agent():
                 })
 
             while True:
-                response, input_tokens, output_tokens = self.generate_next_step(
+                response, input_tokens, output_tokens = self.generate(
                     self.model, self.messages, tools=self.tool_definitions
                 )
 

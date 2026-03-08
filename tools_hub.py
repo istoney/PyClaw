@@ -454,4 +454,8 @@ def search_memory(tool_input):
         }
     } """
     query = tool_input.get("query")
-    return memory_management.query_memory(query)
+    results = memory_management.query_memory(query)
+    if results:
+        return "Found the following relevant facts in memory:\n" + "\n".join(f"{i}. {fact}" for i, fact in enumerate(results, 1))
+    else:
+        return "No relevant facts found in memory."

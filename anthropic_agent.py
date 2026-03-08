@@ -18,7 +18,7 @@ class AnthropicAgent(Agent):
         self.tool_definitions = tools_hub.get_tool_definitions_claude_style()
         self.messages = []
     
-    def generate(self, model, messages, tools=None):
+    def generate(self, model, messages, tools=[]):
         message = self.llm_client.messages.create(
             model=model,
             messages=messages,
