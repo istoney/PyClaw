@@ -1,6 +1,8 @@
 # 🦀 PyClaw
 PyClaw is a Python-based personal AI assistant that runs locally on your computer to automate your workflows and handle tasks autonomously.
 
+![](/architecture.png)
+
 ## 🚀 Getting Started
 1. Clone the repository:
 
