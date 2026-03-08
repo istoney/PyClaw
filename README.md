@@ -55,7 +55,8 @@ PyClaw maintains a persistent memory system:
 - Common Facts: PyClaw leverage chromadb to manage common facts memory. And relevant facts will be loaded into context automatically.
 
 ### 🧠 Self-Evolving SOPs (Standard Operating Procedures)
-PyClaw learns from experience. After completing a task, it automatically summarizes the process into an SOP file.
+
+PyClaw use a prompt "hook" to detect if task done. After completing a task complete, it will be asked to summarize the process into an SOP. When user give new task, it will automatically check if SOP exist and follow it.
 
 - Efficiency: For recurring tasks, PyClaw follows the established SOP to save time.
 
