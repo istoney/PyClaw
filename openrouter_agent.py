@@ -30,30 +30,45 @@ class OpenRouterAgent(Agent):
         response, input_tokens, _ = self.generate(self.model, self.messages, tools=self.tool_definitions)
         return response, input_tokens
     
+    def get_compress_messages(self):
+        if len(self.messages) <= 4:
+            return []
+
+        call_id_map = set()
+        i = -1
+        while True:
+            msg = self.messages[i]
+            if msg['type'] == 'function_call_output':
+                call_id_map.add(msg['call_id'])
+            if msg['type'] == 'function_call':
+                call_id_map.remove(msg['call_id'])
+            if len(call_id_map) == 0 and i <= -4:
+                break
+            i -= 1
+
+        return [self.messages[0]], self.messages[1:i], self.messages[i:]
+
     def compress_conversation(self):
-        conversation = json.dumps(self.messages[1:-1])
-        prompt = COMPRESS_PROMPT + "\n```\n" + conversation + "\n```\nNow start to summarize the conversation"
+        head, messages, tail = self.get_compress_messages()
+        print(f"[purple]Compressing conversation. \n{len(head)}, {len(messages)}, {len(tail)}[/purple]")
+        if not messages:            
+            return  
 
         response, input_tokens, output_tokens = self.generate(self.model, messages=[{
             "role": "system",
-            "content": prompt
+            "content": f"{COMPRESS_PROMPT}\n```\n{json.dumps(messages)}\n```\nNow start to summarize the conversation"
         }])
 
-        compressed_summary = ""
-        for chunk in response['output']:
-            if chunk['type'] == 'message':
-                for content in chunk['content']:
-                    compressed_summary += content['text'] + "\n"
+        output_messages = [chunk for chunk in response['output'] if chunk['type'] == 'message']
+        compressed_summary = output_messages[0]['content'][0]['text'] 
         print(f"[purple]Compression Result (Output Tokens: {output_tokens}) [/purple]")
         print(f"[purple]{compressed_summary}[/purple]")
 
-        self.messages = [{
-            "role": "system",
-            "content": self.system_prompt
-        }, {
+        new_msg = {
             "role": "system",
             "content": f"Current conversation is:\n{compressed_summary}"
-        }]
+        }
+        self.messages = head + [new_msg] + tail
     
     def process_response(self, response):
         has_tool_calls = False

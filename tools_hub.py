@@ -86,6 +86,36 @@ def glob(tool_input):
     return "\n".join(l)
 
 @tool_handler
+def mkdir(tool_input):
+    """ {
+        "description": "Create a new directory",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "directory": {
+                    "type": "string",
+                    "description": "Directory path to create, e.g., ~/Documents/NewFolder"
+                }
+            },
+            "required": ["directory"]
+        }
+    } """
+    directory = tool_input.get("directory")
+    p = Path(directory).expanduser().resolve()
+    workdir = global_settings.working_directory
+    if workdir is None:
+        return "Error: No working directory set in settings."
+    workdir = Path(workdir).expanduser().resolve()
+    if not p.is_relative_to(workdir):
+        return f"Error: Folder path {p} is outside of the working directory {workdir}. You are only permitted to create folders within the working directory."
+
+    try:
+        p.mkdir(parents=True, exist_ok=True)
+        return f"Successfully created directory: {p}"
+    except Exception as e:
+        return f"Error creating directory: {str(e)}"
+
+@tool_handler
 def tail(tool_input):
     """ {
         "description": "Read the last few lines of a specified file",

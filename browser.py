@@ -8,7 +8,7 @@ import random
 import global_settings
 from PIL import Image
 from rich import print
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag, NavigableString
 from playwright.sync_api import sync_playwright
 from playwright_stealth import Stealth
 from client.gemini import GeminiClient
@@ -78,17 +78,17 @@ def open_url(url, workdir):
 
     page_id = str(uuid.uuid4())
     page_content = get_full_html_fixed(page)
-    cleaned_content = strip_attributes_keep_structure(page_content)
+    cleaned_content = extract_readable_info(page_content)
     # print(page_content)
     # print('\n\n\n')
     # print(cleaned_content)
     # print('\n\n\n')
 
-    file_path = f"{workdir}tmp/{page_id}-rawhtml.html" if workdir.endswith('/') else f"{workdir}/tmp/{page_id}-rawhtml.html"
+    file_path = f"{workdir}tmp/{page_id}-raw.html" if workdir.endswith('/') else f"{workdir}/tmp/{page_id}-raw.html"
     full_path = os.path.expanduser(file_path)
     with open(full_path, "w", encoding="utf-8") as f:
         f.write(page_content)
-    file_path2 = f"{workdir}tmp/{page_id}-cleanedhtml.html" if workdir.endswith('/') else f"{workdir}/tmp/{page_id}-cleanedhtml.html"
+    file_path2 = f"{workdir}tmp/{page_id}-cleaned.html" if workdir.endswith('/') else f"{workdir}/tmp/{page_id}-cleaned.html"
     full_path2 = os.path.expanduser(file_path2)
     with open(full_path2, "w", encoding="utf-8") as f:
         f.write(cleaned_content)
@@ -405,3 +405,37 @@ def strip_attributes_keep_structure(html_content):
 
     text = target_root.decode_contents()
     return re.sub(r'\s+', ' ', text)
+
+def extract_readable_info(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    return _extract_readable_info(soup)
+
+def _extract_readable_info(element):
+    if isinstance(element, NavigableString):
+        # text = element.strip()
+        text = re.sub(r'\s+', ' ', element.strip())
+        return text if text else None
+    elif isinstance(element, Tag):
+        if element.name in ['script', 'style', 'noscript', 'footer', 'head']:
+            return None
+        
+        if element.name == 'a' and 'href' in element.attrs:
+            element.attrs = {'href': element.attrs.get('href', '')}
+            return str(element)
+        elif element.name == 'img' and 'src' in element.attrs:
+            element.attrs = {'src': element.attrs.get('src', ''), 'data-src': element.attrs.get('data-src', '')}
+            return str(element)
+        elif element.name == 'button':
+            element.attrs = {}
+            return str(element)
+
+        children = []
+        for child in element.children:
+            child_info = _extract_readable_info(child)
+            if child_info:
+                children.append(child_info)
+        if len(children) == 0:
+            return None
+        # TODO compress levels
+        return f"<{element.name}>{''.join(children)}</{element.name}>"
+    return None
