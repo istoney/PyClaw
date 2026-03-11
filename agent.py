@@ -79,12 +79,12 @@ class Agent():
                 response, input_tokens, output_tokens = self.generate(
                     self.model, self.messages, tools=self.tool_definitions
                 )
+                has_tool_calls= self.process_response(response)
 
                 if input_tokens > global_settings.compression_threshold:
                     print(f"[purple]Input tokens ({input_tokens}) exceed compression threshold. Compressing conversation...[/purple]")
                     self.compress_conversation()
 
-                has_tool_calls= self.process_response(response)
                 if has_tool_calls:
                     continue
                 task_done, to_do = self.check_task_completion()
